@@ -1,6 +1,18 @@
-name: Deploy Para Ambiente de Teste 
+name: deploy the stage environment
 
 on:
   push:
-    branches:
-      - main
+    tags: [ '*.*.*' ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
