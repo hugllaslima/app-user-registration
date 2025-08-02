@@ -1,0 +1,6 @@
+name: Deploy Para Ambiente de Producao 
+
+on:
+  push:
+    branches:
+      - main

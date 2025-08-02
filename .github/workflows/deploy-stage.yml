@@ -1,0 +1,6 @@
+name: Deploy Para Ambiente de Teste 
+
+on:
+  push:
+    branches:
+      - main

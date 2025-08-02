@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cadastrar Usuário</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap/dist/css/bootstrap.min.css">
+</head>
+<body class="container">
+    <h2>Cadastrar Novo Usuário</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="alert alert-danger">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    <form method="POST">
+        <input type="text" name="fullname" placeholder="Nome Completo" class="form-control" required>
+        <input type="text" name="phone" placeholder="Telefone" class="form-control mt-2" required>
+        <input type="email" name="email" placeholder="E-mail" class="form-control mt-2" required>
+        <input type="text" name="username" placeholder="Nome de Usuário" class="form-control mt-2" required>
+        <input type="password" name="password" placeholder="Senha" class="form-control mt-2" required>
+        <button type="submit" class="btn btn-success mt-3">Cadastrar</button>
+    </form>
+    <a href="{{ url_for('users') }}">Voltar para usuários</a>
+</body>
+</html>
