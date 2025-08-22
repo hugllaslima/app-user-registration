@@ -49,4 +49,4 @@ jobs:
             sudo docker pull ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
             sudo docker stop ${{ secrets.AWS_ECR_REPOSITORY }} || true
             sudo docker rm ${{ secrets.AWS_ECR_REPOSITORY }} || true
-            sudo docker run -d --restart=always --name ${{ secrets.AWS_ECR_REPOSITORY }} -p 8080:80 ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
+            sudo docker run -d --restart=always --name ${{ secrets.AWS_ECR_REPOSITORY }} -p 8080:5000 ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
