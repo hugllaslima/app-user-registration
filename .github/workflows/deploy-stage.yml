@@ -1,18 +1,30 @@
-name: deploy the stage environment
+name: Deploy Para Ambiente de Stage Local
 
 on:
   push:
-    tags: [ '*.*.*' ]
-  workflow_dispatch:
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+    branches:
+      - stage   
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
+  deploy-stage:
+    runs-on: [self-hosted, stage-runner]
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Build da imagem Docker
+        working-directory: ./src
+        run: docker build -t app-user-registration .
+
+      - name: Parar e remover container antigo
+        run: |
+          docker stop app-form-web-stage || true
+          docker rm app-user-registration-stage || true
+
+      - name: Subir novo container de Stage
+        run: |
+          docker run -d --restart=always --name app-user-registration-stage -p 8080:80 app-user-registration-stage:latest
+
+      - name: Cleanup imagens antigas
+        run: docker image prune -f 
