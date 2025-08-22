@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    environment: app-user-registration
+    environment: app-user-registration-prod
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
