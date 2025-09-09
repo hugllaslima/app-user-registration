@@ -1,9 +1,9 @@
-name: Deploy Para Ambiente de Stage Local
+name: Deploy Para Ambiente Develop
 
 on:
   push:
     branches:
-      - stage   
+      - develop   
 
 jobs:
   deploy-stage:
@@ -17,12 +17,12 @@ jobs:
         working-directory: ./src
         run: docker build -t app-user-registration .
 
-      - name: Parar e remover container antigo
+      - name: Parar e remover containers antigos
         run: |
           docker stop app-form-web-stage || true
           docker rm app-user-registration-stage || true
 
-      - name: Subir novo container de Stage
+      - name: Subir novo container
         run: |
           docker run -d --restart=always --name app-user-registration-stage -p 8080:80 app-user-registration-stage:latest
 
