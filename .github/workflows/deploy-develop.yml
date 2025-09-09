@@ -20,7 +20,7 @@ jobs:
       - name: Parar e remover containers antigos
         run: |
           docker stop app-form-web-stage || true
-          docker rm app-user-registration-stage || true
+          docker rm app-user-registration-develop || true
 
       - name: Subir novo container
         run: |
