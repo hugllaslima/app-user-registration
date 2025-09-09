@@ -1,0 +1,30 @@
+name: Deploy Para Ambiente Develop
+
+on:
+  push:
+    branches:
+      - develop   
+
+jobs:
+  deploy-develop:
+    runs-on: [self-hosted, stage-runner]
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Build da imagem Docker
+        working-directory: ./src
+        run: docker build -t app-user-registration .
+
+      - name: Parar e remover containers antigos
+        run: |
+          docker stop app-form-web-stage || true
+          docker rm app-user-registration-stage || true
+
+      - name: Subir novo container
+        run: |
+          docker run -d --restart=always --name app-user-registration-stage -p 8080:80 app-user-registration-stage:latest
+
+      - name: Cleanup imagens antigas
+        run: docker image prune -f 
