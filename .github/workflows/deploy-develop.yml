@@ -24,7 +24,7 @@ jobs:
 
       - name: Subir novo container
         run: |
-          docker run -d --restart=always --name app-user-registration-stage -p 8080:80 app-user-registration-stage:latest
+          docker run -d --restart=always --name app-user-registration-stage -p 8088:80 app-user-registration-stage:latest
 
       - name: Cleanup imagens antigas
         run: docker image prune -f 
