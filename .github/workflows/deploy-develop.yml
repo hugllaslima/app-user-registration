@@ -19,12 +19,12 @@ jobs:
 
       - name: Parar e remover containers antigos
         run: |
-          docker stop app-form-web-stage || true
-          docker rm app-user-registration-stage || true
+          docker stop app-form-web-develop || true
+          docker rm app-user-registration-develop || true
 
       - name: Subir novo container
         run: |
-          docker run -d --restart=always --name app-user-registration-stage -p 8088:80 app-user-registration-stage:latest
+          docker run -d --restart=always --name app-user-registration-develop -p 8088:80 app-user-registration-develop:latest
 
       - name: Cleanup imagens antigas
         run: docker image prune -f 
