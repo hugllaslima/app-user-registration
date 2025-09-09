@@ -1,4 +1,4 @@
-name: Deploy Para Ambiente de Producao AWS
+name: Deploy Para Ambiente Production
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-deploy:
-    environment: app-user-registration-prod
+    environment: app-user-registration-production
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
