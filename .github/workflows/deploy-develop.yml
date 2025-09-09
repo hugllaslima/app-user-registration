@@ -6,7 +6,7 @@ on:
       - develop   
 
 jobs:
-  deploy-stage:
+  deploy-develop:
     runs-on: [self-hosted, stage-runner]
 
     steps:
