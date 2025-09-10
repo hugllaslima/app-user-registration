@@ -21,3 +21,4 @@ EXPOSE 5000
 
 # Define o comando padrão que será executado quando o container iniciar
 ENTRYPOINT ["./scripts/entrypoint.sh"]
+
