@@ -1,0 +1,65 @@
+/* Estilo geral da página */
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f0f2f5; /* Um cinza bem claro para o fundo */
+    
+    /* A mágica para centralizar! */
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center;    /* Centraliza verticalmente */
+    height: 100vh;          /* Ocupa 100% da altura da tela */
+}
+
+/* A "caixa" que vai conter nosso formulário */
+.login-container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 360px; /* Largura máxima da caixa */
+    text-align: center;
+}
+
+/* Estilo do título "Entrar" */
+.login-container h1 {
+    margin-bottom: 24px;
+    color: #333;
+}
+
+/* Estilo para os campos de input e o botão */
+.login-container input,
+.login-container button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    box-sizing: border-box; /* Garante que o padding não aumente a largura */
+    font-size: 16px;
+}
+
+/* Estilo específico do botão */
+.login-container button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* Efeito ao passar o mouse sobre o botão */
+.login-container button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo para a mensagem de erro (flash) */
+.flash-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    border: 1px solid #f5c6cb;
+}
