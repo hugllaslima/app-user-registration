@@ -18,9 +18,7 @@
 
 │ ├── css/
 
-│ | ├── style.css
-
-│ ├── sync-branchs.sh  # (Sincronizar as branchs após pull request)
+│ │ └── style.css
 
 ├── templates/
 
