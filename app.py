@@ -92,6 +92,5 @@ def users():
 
 
 if __name__ == '__main__':
-    # Esta linha abaixo é ótima para desenvolvimento local, mas não para produção em Docker.
-    # O comando do Dockerfile irá sobrepô-la.
+
     app.run(host='0.0.0.0', port=5000)
