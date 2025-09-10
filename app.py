@@ -2,10 +2,13 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 import os
 
+
 app = Flask(__name__)
-app.secret_key = 'mysupersecret'  # Troque isso em produção!
+app.secret_key = 'mysupersecret' # Troque isso em produção!
+
 
 DB_NAME = 'users.db'
+
 
 # Initialize DB
 def init_db():
@@ -18,17 +21,21 @@ def init_db():
                             username TEXT NOT NULL UNIQUE,
                             password TEXT NOT NULL
                         )''')
-    print("Database Initialized.")
+    print("Tabela 'users' verificada/criada.")
 
-@app.before_first_request
-def setup():
+
+@app.cli.command("init-db")
+def init_db_command():
+    """Cria as tabelas do banco de dados."""
     init_db()
+
 
 @app.route('/')
 def index():
     if not session.get('logged_in'):
         return redirect(url_for('login'))
     return redirect(url_for('users'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -45,10 +52,12 @@ def login():
             flash('Usuário ou Senha inválidos')
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -72,6 +81,7 @@ def register():
             flash('Nome de usuário já existe!')
     return render_template('register.html')
 
+
 @app.route('/users')
 def users():
     if not session.get('logged_in'):
@@ -80,5 +90,8 @@ def users():
         users = conn.execute("SELECT fullname, phone, email, username FROM users").fetchall()
     return render_template('users.html', users=users)
 
+
 if __name__ == '__main__':
+    # Esta linha abaixo é ótima para desenvolvimento local, mas não para produção em Docker.
+    # O comando do Dockerfile irá sobrepô-la.
     app.run(host='0.0.0.0', port=5000)
