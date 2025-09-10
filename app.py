@@ -61,8 +61,6 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if not session.get('logged_in'):
-        return redirect(url_for('login'))
     if request.method == 'POST':
         fullname = request.form['fullname']
         email = request.form['email']
@@ -76,7 +74,7 @@ def register():
                     (fullname, phone, email, username, password)
                 )
             flash('Usuário cadastrado com sucesso!')
-            return redirect(url_for('users'))
+            return redirect(url_for('login')) 
         except sqlite3.IntegrityError:
             flash('Nome de usuário já existe!')
     return render_template('register.html')
