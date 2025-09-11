@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy-develop:
-    runs-on: [self-hosted, stage-runner]
+    runs-on: [self-hosted, develop-runner]
 
     steps:
       - name: Checkout do código
