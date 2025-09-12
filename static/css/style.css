@@ -11,6 +11,56 @@ body {
     height: 100vh;          /* Ocupa 100% da altura da tela */
 }
 
+/* Estilo para o formulário de registro, similar ao login */
+.register-container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 360px; /* Largura máxima da caixa */
+    text-align: center;
+}
+
+.register-container h1 {
+    margin-bottom: 24px;
+    color: #333;
+}
+
+.register-container input,
+.register-container button {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.register-container button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.register-container button:hover {
+    background-color: #218838;
+}
+
+.register-container a {
+    display: inline-block;
+    margin-top: 10px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.register-container a:hover {
+    text-decoration: underline;
+}
+
 /* A "caixa" que vai conter nosso formulário */
 .login-container {
     background-color: white;
