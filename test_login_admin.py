@@ -21,7 +21,7 @@ def test_login():
     # Preparar dados de login
     login_data = {
         'username': 'admin',
-        'password': 'admin123'
+        'password': 'admin'
     }
     
     # Adicionar token CSRF se encontrado

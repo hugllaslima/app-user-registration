@@ -83,7 +83,7 @@ def init_db():
         if admin_exists == 0:
             conn.execute(
                 "INSERT OR IGNORE INTO users (fullname, phone, email, username, password, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
-                ("Administrador", "(00) 00000-0000", "admin@example.com", "admin", "admin123", 1)
+                ("Administrador", "(00) 00000-0000", "admin@example.com", "admin", "admin", 1)
             )
             print("Usuário administrador padrão criado.")
     
