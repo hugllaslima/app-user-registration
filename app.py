@@ -14,11 +14,15 @@ metrics.info('app_info', 'Informações da aplicação', version='1.0.0')
 
 # Métricas personalizadas
 login_counter = metrics.counter(
-    'login_count', 'Número de logins realizados',
-    labels={'status': lambda: 'success' if session.get('logged_in') else 'failed'}
+    'login_count_total', 'Número de logins realizados',
+    labels={'status': 'success'}
+)
+login_failed_counter = metrics.counter(
+    'login_failed_count_total', 'Número de logins falhos',
+    labels={'status': 'failed'}
 )
 registration_counter = metrics.counter(
-    'registration_count', 'Número de registros realizados'
+    'registration_count_total', 'Número de registros realizados'
 )
 
 
@@ -79,11 +83,11 @@ def login():
             session['username'] = user[1]
             session['is_admin'] = bool(user[2])
             # Incrementa o contador de login bem-sucedido
-            login_counter.labels(status='success').inc()
+            login_counter.inc()
             return redirect(url_for('users'))
         else:
             # Incrementa o contador de login falho
-            login_counter.labels(status='failed').inc()
+            login_failed_counter.inc()
             flash('Usuário ou Senha inválidos')
     return render_template('login.html')
 

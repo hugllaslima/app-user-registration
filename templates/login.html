@@ -21,8 +21,13 @@
         {% endwith %}
 
         <form method="post">
-            <input type="text" name="username" placeholder="Nome de usuário" required>
+            <input type="text" name="username" placeholder="Nome de usuário (ex: admin)" required>
             <input type="password" name="password" placeholder="Senha" required>
+            <div class="login-info">
+                <p>Para o administrador padrão, use:</p>
+                <p><strong>Usuário:</strong> admin</p>
+                <p><strong>Senha:</strong> admin123</p>
+            </div>
             <button type="submit">Login</button>
         </form>
     </div>
