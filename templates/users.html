@@ -1,32 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Usuários Cadastrados</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="container">
-    <h2>Usuários</h2>
-    <a href="{{ url_for('register') }}" class="btn btn-success mb-2">Novo Usuário</a>
-    <a href="{{ url_for('logout') }}" class="btn btn-danger mb-2">Logout</a>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Telefone</th>
-                <th>E-mail</th>
-                <th>Usuário</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for u in users %}
-            <tr>
-                <td>{{ u[0] }}</td>
-                <td>{{ u[1] }}</td>
-                <td>{{ u[2] }}</td>
-                <td>{{ u[3] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<body>
+    <div class="users-container">
+        <h1>{% if is_admin %}Gerenciamento de Usuários{% else %}Meus Dados{% endif %}</h1>
+        
+        <div class="user-actions">
+            {% if is_admin %}
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Novo Usuário</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+        </div>
+        
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>E-mail</th>
+                    <th>Usuário</th>
+                    {% if is_admin %}
+                    <th>Tipo</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u[1] }}</td>
+                    <td>{{ u[2] }}</td>
+                    <td>{{ u[3] }}</td>
+                    <td>{{ u[4] }}</td>
+                    {% if is_admin %}
+                    <td>{% if u[5] %}Administrador{% else %}Usuário{% endif %}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
