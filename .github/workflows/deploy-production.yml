@@ -46,7 +46,7 @@ jobs:
       - name: Subir novos containers
         run: |          
           sudo docker run -d --restart=always --name ${{ secrets.AWS_ECR_REPOSITORY }} -p 80:5000 ${{ secrets.AWS_ECR_REPOSITORY }}:latest
-          
-        - name: Cleanup imagens antigas
+
+      - name: Cleanup imagens antigas
         run: | 
           docker image prune -f 
