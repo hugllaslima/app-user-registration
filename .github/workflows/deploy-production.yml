@@ -8,7 +8,8 @@ on:
 jobs:
   build-and-deploy:
     environment: app-user-registration-production
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, production-runner]
+    
     steps:
       - name: Checkout do código
         uses: actions/checkout@v3
@@ -37,16 +38,15 @@ jobs:
         run: |
           docker push ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
 
-      - name: Deploy na Instância EC2 via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.AWS_EC2_HOST }}
-          username: ${{ secrets.AWS_EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_REGION
-          script: |
-            sudo docker login --username AWS --password $(aws ecr get-login-password --region $AWS_REGION) ${{ secrets.AWS_ECR_REGISTRY }}
-            sudo docker pull ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-            sudo docker stop ${{ secrets.AWS_ECR_REPOSITORY }} || true
-            sudo docker rm ${{ secrets.AWS_ECR_REPOSITORY }} || true
-            sudo docker run -d --restart=always --name ${{ secrets.AWS_ECR_REPOSITORY }} -p 8080:5000 ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
+      - name: Parar e remover containers antigos
+        run: |
+          sudo docker stop ${{ secrets.AWS_ECR_REPOSITORY }} || true
+          sudo docker rm ${{ secrets.AWS_ECR_REPOSITORY }} || true
+
+      - name: Subir novos containers
+        run: |          
+          sudo docker run -d --restart=always --name ${{ secrets.AWS_ECR_REPOSITORY }} -p 80:5000 ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+          
+        - name: Cleanup imagens antigas
+        run: | 
+          docker image prune -f 
