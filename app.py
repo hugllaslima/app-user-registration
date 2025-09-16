@@ -4,8 +4,13 @@ import os
 from prometheus_flask_exporter import PrometheusMetrics
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 app.secret_key = 'mysupersecret' # Troque isso em produção!
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Configuração do Prometheus
 metrics = PrometheusMetrics(app)
@@ -14,16 +19,45 @@ metrics.info('app_info', 'Informações da aplicação', version='1.0.0')
 
 # Métricas personalizadas
 login_counter = metrics.counter(
-    'login_count_total', 'Número de logins realizados',
-    labels={'status': 'success'}
+    'login_count_total', 'Número de logins realizados'
 )
 login_failed_counter = metrics.counter(
-    'login_failed_count_total', 'Número de logins falhos',
-    labels={'status': 'failed'}
+    'login_failed_count_total', 'Número de logins falhos'
 )
 registration_counter = metrics.counter(
     'registration_count_total', 'Número de registros realizados'
 )
+
+# Definir funções auxiliares para incrementar contadores com segurança
+def increment_login_counter():
+    global login_counter
+    try:
+        if hasattr(login_counter, 'inc'):
+            login_counter.inc()
+        else:
+            print("Contador de login não possui método inc")
+    except Exception as e:
+        print(f"Erro ao incrementar contador de login: {e}")
+
+def increment_login_failed_counter():
+    global login_failed_counter
+    try:
+        if hasattr(login_failed_counter, 'inc'):
+            login_failed_counter.inc()
+        else:
+            print("Contador de login falho não possui método inc")
+    except Exception as e:
+        print(f"Erro ao incrementar contador de login falho: {e}")
+
+def increment_registration_counter():
+    global registration_counter
+    try:
+        if hasattr(registration_counter, 'inc'):
+            registration_counter.inc()
+        else:
+            print("Contador de registro não possui método inc")
+    except Exception as e:
+        print(f"Erro ao incrementar contador de registro: {e}")
 
 
 DB_NAME = 'users.db'
@@ -75,19 +109,33 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        print(f"Tentativa de login: username={username}, password={'*' * len(password)}")
+        
         with sqlite3.connect(DB_NAME) as conn:
             user = conn.execute("SELECT id, username, is_admin FROM users WHERE username=? AND password=?", (username, password)).fetchone()
+            print(f"Resultado da consulta: {user}")
+            
         if user:
+            print(f"Login bem-sucedido para o usuário: {username}")
+            session.clear()  # Limpa qualquer sessão anterior
             session['logged_in'] = True
             session['user_id'] = user[0]
             session['username'] = user[1]
             session['is_admin'] = bool(user[2])
+            print(f"Sessão configurada: {session}")
+            
             # Incrementa o contador de login bem-sucedido
-            login_counter.inc()
-            return redirect(url_for('users'))
+            increment_login_counter()
+            
+            # Redireciona para a página de usuários
+            print(f"Redirecionando para: {url_for('users')}")
+            response = redirect(url_for('users'))
+            print(f"Resposta de redirecionamento: {response}")
+            return response
         else:
+            print(f"Login falhou para o usuário: {username}")
             # Incrementa o contador de login falho
-            login_failed_counter.inc()
+            increment_login_failed_counter()
             flash('Usuário ou Senha inválidos')
     return render_template('login.html')
 
@@ -124,7 +172,7 @@ def register():
                     (fullname, phone, email, username, password, is_admin)
                 )
             # Incrementa o contador de registros
-            registration_counter.inc()
+            increment_registration_counter()
             flash('Usuário cadastrado com sucesso!')
             return redirect(url_for('users')) 
         except sqlite3.IntegrityError:
