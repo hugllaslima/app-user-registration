@@ -22,6 +22,10 @@
             <input type="email" name="email" placeholder="E-mail" required>
             <input type="text" name="username" placeholder="Nome de Usuário" required>
             <input type="password" name="password" placeholder="Senha" required>
+            <div class="checkbox-container">
+                <input type="checkbox" id="is_admin" name="is_admin">
+                <label for="is_admin">Usuário Administrador</label>
+            </div>
             <button type="submit">Cadastrar</button>
         </form>
         <a href="{{ url_for('users') }}">Voltar para usuários</a>

@@ -61,6 +61,85 @@ body {
     text-decoration: underline;
 }
 
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: auto;
+    margin-right: 10px;
+}
+
+.checkbox-container label {
+    margin: 0;
+}
+
+/* Estilo para a página de usuários */
+.users-container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+}
+
+.users-container h1 {
+    margin-bottom: 24px;
+    color: #333;
+}
+
+.user-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.users-table th,
+.users-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.users-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.users-table tr:hover {
+    background-color: #f1f1f1;
+}
+
 /* A "caixa" que vai conter nosso formulário */
 .login-container {
     background-color: white;
