@@ -32,7 +32,7 @@ jobs:
 
       - name: Tag da imagem para o ECR
         run: |
-          docker tag ${{ secrets.AWS_ECR_REPOSITORY }}:latest ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}
+          docker tag ${{ secrets.AWS_ECR_REPOSITORY }}:latest ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
 
       - name: Enviar a Imagem para o Amazon ECR
         run: |
