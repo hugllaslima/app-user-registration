@@ -2,13 +2,19 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import sqlite3
 import os
 from prometheus_flask_exporter import PrometheusMetrics
+from werkzeug.security import generate_password_hash, check_password_hash
+from dotenv import load_dotenv
 
+# Carrega variáveis de ambiente do arquivo .env
+load_dotenv()
 
 app = Flask(__name__, static_url_path='/static')
-app.secret_key = 'mysupersecret' # Troque isso em produção!
+
+# Configurações de segurança usando variáveis de ambiente
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'fallback-key-change-in-production')
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
-app.config['SESSION_COOKIE_SECURE'] = False
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() == 'true'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
@@ -79,13 +85,21 @@ def init_db():
         # Verificar se existe algum usuário admin
         admin_exists = conn.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0]
         
-        # Se não existir nenhum admin, criar um usuário admin padrão
+        # Se não existir nenhum admin, criar um usuário admin padrão com senha hash
         if admin_exists == 0:
+            admin_username = os.getenv('ADMIN_USERNAME', 'admin')
+            admin_password = os.getenv('ADMIN_PASSWORD', 'admin')
+            admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+            admin_fullname = os.getenv('ADMIN_FULLNAME', 'Administrador')
+            admin_phone = os.getenv('ADMIN_PHONE', '(00) 00000-0000')
+            
+            hashed_password = generate_password_hash(admin_password)
+            
             conn.execute(
                 "INSERT OR IGNORE INTO users (fullname, phone, email, username, password, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
-                ("Administrador", "(00) 00000-0000", "admin@example.com", "admin", "admin", 1)
+                (admin_fullname, admin_phone, admin_email, admin_username, hashed_password, 1)
             )
-            print("Usuário administrador padrão criado.")
+            print("Usuário administrador padrão criado com senha hash.")
     
     print("Tabela 'users' verificada/criada.")
 
@@ -109,31 +123,27 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        print(f"Tentativa de login: username={username}, password={'*' * len(password)}")
+        
+        # Validação básica de entrada
+        if not username or not password:
+            flash('Usuário e senha são obrigatórios')
+            return render_template('login.html')
         
         with sqlite3.connect(DB_NAME) as conn:
-            user = conn.execute("SELECT id, username, is_admin FROM users WHERE username=? AND password=?", (username, password)).fetchone()
-            print(f"Resultado da consulta: {user}")
+            user = conn.execute("SELECT id, username, password, is_admin FROM users WHERE username=?", (username,)).fetchone()
             
-        if user:
-            print(f"Login bem-sucedido para o usuário: {username}")
+        if user and check_password_hash(user[2], password):
             session.clear()  # Limpa qualquer sessão anterior
             session['logged_in'] = True
             session['user_id'] = user[0]
             session['username'] = user[1]
-            session['is_admin'] = bool(user[2])
-            print(f"Sessão configurada: {session}")
+            session['is_admin'] = bool(user[3])
             
             # Incrementa o contador de login bem-sucedido
             increment_login_counter()
             
-            # Redireciona para a página de usuários
-            print(f"Redirecionando para: {url_for('users')}")
-            response = redirect(url_for('users'))
-            print(f"Resposta de redirecionamento: {response}")
-            return response
+            return redirect(url_for('users'))
         else:
-            print(f"Login falhou para o usuário: {username}")
             # Incrementa o contador de login falho
             increment_login_failed_counter()
             flash('Usuário ou Senha inválidos')
@@ -158,18 +168,31 @@ def register():
         return redirect(url_for('users'))
     
     if request.method == 'POST':
-        fullname = request.form['fullname']
-        email = request.form['email']
-        phone = request.form['phone']
-        username = request.form['username']
-        password = request.form['password']
-        is_admin = 'is_admin' in request.form  # Checkbox para definir se o usuário é admin
+        fullname = request.form.get('fullname', '').strip()
+        email = request.form.get('email', '').strip()
+        phone = request.form.get('phone', '').strip()
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        is_admin = 'is_admin' in request.form
+        
+        # Validação básica
+        if not all([fullname, email, phone, username, password]):
+            flash('Todos os campos são obrigatórios!')
+            return render_template('register.html')
+        
+        # Validação de senha forte
+        if len(password) < 8:
+            flash('A senha deve ter pelo menos 8 caracteres!')
+            return render_template('register.html')
+        
+        # Hash da senha
+        hashed_password = generate_password_hash(password)
         
         try:
             with sqlite3.connect(DB_NAME) as conn:
                 conn.execute(
                     "INSERT INTO users (fullname, phone, email, username, password, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
-                    (fullname, phone, email, username, password, is_admin)
+                    (fullname, phone, email, username, hashed_password, is_admin)
                 )
             # Incrementa o contador de registros
             increment_registration_counter()
@@ -204,4 +227,9 @@ def metrics():
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', debug=True)
+    # Configurações de produção mais seguras
+    debug_mode = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
+    host = os.getenv('HOST', '0.0.0.0')
+    port = int(os.getenv('PORT', 5000))
+    
+    app.run(host=host, port=port, debug=debug_mode)

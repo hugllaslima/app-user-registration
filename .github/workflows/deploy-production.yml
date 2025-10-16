@@ -1,53 +1,108 @@
 
+# =============================================================================
+# WORKFLOW DE DEPLOY PARA AMBIENTE DE PRODUÇÃO
+# =============================================================================
+# Este workflow é executado automaticamente quando há push na branch 'main'
+# Objetivo: Deploy seguro e controlado para o ambiente de produção
+# Ambiente: AWS ECR + Servidor de produção com self-hosted runner
+# Segurança: Utiliza secrets do GitHub para credenciais AWS
+# =============================================================================
+
 name: Deploy Para Ambiente Production
 
+# TRIGGER: Define quando este workflow será executado
 on:
   push:
     branches:
-      - main
+      - main   # Executa apenas quando há push na branch main (produção)
 
 jobs:
-  build-and-deploy:
-    environment: app-user-registration-production
+  deploy-production:
+    # RUNNER: Especifica onde o job será executado
+    # [self-hosted, production-runner] = runner próprio com label 'production-runner'
+    # Ambiente isolado e seguro para deploys de produção
     runs-on: [self-hosted, production-runner]
-    
+
     steps:
+      # STEP 1: Baixar o código fonte do repositório
+      # actions/checkout@v3 é uma action oficial do GitHub
+      # Faz o download do código da branch main para o runner
       - name: Checkout do código
         uses: actions/checkout@v3
 
-      - name: Configurar AWS Credentials
+      # STEP 2: Configurar credenciais AWS
+      # Utiliza secrets configurados no GitHub para autenticação segura
+      # AWS_ACCESS_KEY_ID e AWS_SECRET_ACCESS_KEY devem estar configurados nos secrets
+      # AWS_DEFAULT_REGION define a região onde está o ECR
+      - name: Configurar credenciais AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
+      # STEP 3: Fazer login no Amazon ECR (Elastic Container Registry)
+      # ECR é o serviço de registry de containers da AWS
+      # Este comando obtém um token de autenticação temporário para push de imagens
       - name: Login no Amazon ECR
-        run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
-          docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build da imagem
+      # STEP 4: Construir, tagear e fazer push da imagem Docker para ECR
+      # ${{ steps.login-ecr.outputs.registry }} = URL do registry ECR
+      # ${{ secrets.ECR_REPOSITORY }} = nome do repositório no ECR (configurado nos secrets)
+      # $GITHUB_SHA = hash único do commit atual (garante versionamento)
+      # latest = tag para a versão mais recente
+      - name: Build, tag e push da imagem para ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t ${{ secrets.AWS_ECR_REPOSITORY }} .
+          # Build da imagem Docker
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          
+          # Push das imagens para o ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-      - name: Tag da imagem para o ECR
-        run: |
-          docker tag ${{ secrets.AWS_ECR_REPOSITORY }}:latest ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-
-      - name: Enviar a Imagem para o Amazon ECR
-        run: |
-          docker push ${{ secrets.AWS_ECR_REGISTRY }}/${{ secrets.AWS_ECR_REPOSITORY }}:latest
-
+      # STEP 5: Parar e remover containers antigos (se existirem)
+      # || true garante que o comando não falhe se o container não existir
+      # Importante para atualizações sem downtime desnecessário
       - name: Parar e remover containers antigos
         run: |
-          sudo docker stop ${{ secrets.AWS_ECR_REPOSITORY }} || true
-          sudo docker rm ${{ secrets.AWS_ECR_REPOSITORY }} || true
+          docker stop app-user-registration-production || true
+          docker rm app-user-registration-production || true
 
-      - name: Subir novos containers
-        run: |          
-          sudo docker run -d --restart=always --name ${{ secrets.AWS_ECR_REPOSITORY }} -p 80:5000 ${{ secrets.AWS_ECR_REPOSITORY }}:latest
+      # STEP 6: Fazer pull da imagem mais recente do ECR
+      # Garante que estamos usando a versão que acabou de ser enviada
+      # ${{ steps.login-ecr.outputs.registry }} = URL do registry ECR
+      # ${{ secrets.ECR_REPOSITORY }} = repositório configurado nos secrets
+      - name: Pull da imagem mais recente do ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
+      # STEP 7: Executar o novo container em produção
+      # -d = executa em background (detached mode)
+      # --restart=always = reinicia automaticamente se o container parar
+      # --name = define o nome do container
+      # -p 80:5000 = mapeia a porta 80 do host para a porta 5000 do container
+      # Usa a imagem recém baixada do ECR
+      - name: Subir novo container
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          docker run -d --restart=always --name app-user-registration-production -p 80:5000 $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      # STEP 8: Limpeza de imagens antigas no servidor
+      # Remove imagens órfãs e antigas para economizar espaço em disco
+      # -f = força a remoção sem confirmação
+      # --filter "until=24h" = remove apenas imagens com mais de 24 horas
       - name: Cleanup imagens antigas
-        run: | 
-          docker image prune -f 
+        run: |
+          docker image prune -f --filter "until=24h"
