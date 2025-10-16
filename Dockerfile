@@ -13,6 +13,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia o restante dos arquivos do diretório atual para o container
 COPY . .
 
+# Copia o arquivo .env.example como .env se não existir .env
+RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
 # Torna o nosso script de inicialização executável
 RUN chmod +x scripts/entrypoint.sh
 
