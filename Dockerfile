@@ -16,6 +16,9 @@ COPY . .
 # Copia o arquivo .env.example como .env se não existir .env
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
 
+# Tornar o script de debug executável
+RUN chmod +x scripts/debug_container.py
+
 # Torna o nosso script de inicialização executável
 RUN chmod +x scripts/entrypoint.sh
 

@@ -6,7 +6,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
 # Carrega variáveis de ambiente do arquivo .env
+# Carregamento das variáveis de ambiente
 load_dotenv()
+
+# Debug: Verificar se as variáveis foram carregadas
+print("🔧 VERIFICAÇÃO DE VARIÁVEIS DE AMBIENTE:")
+print(f"   - FLASK_SECRET_KEY: {os.getenv('FLASK_SECRET_KEY', 'NÃO DEFINIDA')}")
+print(f"   - ADMIN_USERNAME: {os.getenv('ADMIN_USERNAME', 'NÃO DEFINIDA')}")
+print(f"   - ADMIN_PASSWORD: {os.getenv('ADMIN_PASSWORD', 'NÃO DEFINIDA')}")
+print(f"   - FLASK_ENV: {os.getenv('FLASK_ENV', 'NÃO DEFINIDA')}")
+print(f"   - FLASK_DEBUG: {os.getenv('FLASK_DEBUG', 'NÃO DEFINIDA')}")
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -71,19 +80,25 @@ DB_NAME = 'users.db'
 
 # Initialize DB
 def init_db():
+    """Inicializa o banco de dados com a tabela de usuários."""
+    print("🔧 Iniciando configuração do banco de dados...")
+    
     with sqlite3.connect(DB_NAME) as conn:
+        # Criar tabela de usuários se não existir
         conn.execute('''CREATE TABLE IF NOT EXISTS users (
                             id INTEGER PRIMARY KEY AUTOINCREMENT,
                             fullname TEXT NOT NULL,
                             phone TEXT NOT NULL,
-                            email TEXT NOT NULL,
+                            email TEXT NOT NULL UNIQUE,
                             username TEXT NOT NULL UNIQUE,
                             password TEXT NOT NULL,
                             is_admin BOOLEAN DEFAULT 0
                         )''')
+        print("✅ Tabela 'users' criada/verificada.")
         
         # Verificar se existe algum usuário admin
         admin_exists = conn.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0]
+        print(f"📊 Usuários admin existentes: {admin_exists}")
         
         # Se não existir nenhum admin, criar um usuário admin padrão com senha hash
         if admin_exists == 0:
@@ -93,15 +108,30 @@ def init_db():
             admin_fullname = os.getenv('ADMIN_FULLNAME', 'Administrador')
             admin_phone = os.getenv('ADMIN_PHONE', '(00) 00000-0000')
             
+            print(f"🔑 Criando usuário admin:")
+            print(f"   - Username: {admin_username}")
+            print(f"   - Password: {admin_password}")
+            print(f"   - Email: {admin_email}")
+            
             hashed_password = generate_password_hash(admin_password)
+            print(f"   - Hash gerado: {hashed_password[:20]}...")
             
             conn.execute(
                 "INSERT OR IGNORE INTO users (fullname, phone, email, username, password, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
                 (admin_fullname, admin_phone, admin_email, admin_username, hashed_password, 1)
             )
-            print("Usuário administrador padrão criado com senha hash.")
+            print("✅ Usuário administrador padrão criado com senha hash.")
+            
+            # Verificar se foi realmente criado
+            created_user = conn.execute("SELECT username, is_admin FROM users WHERE username=?", (admin_username,)).fetchone()
+            if created_user:
+                print(f"✅ Confirmação: Usuário '{created_user[0]}' criado como admin: {bool(created_user[1])}")
+            else:
+                print("❌ ERRO: Usuário admin não foi criado!")
+        else:
+            print("ℹ️  Usuário admin já existe, pulando criação.")
     
-    print("Tabela 'users' verificada/criada.")
+    print("🏁 Configuração do banco de dados concluída.")
 
 
 
@@ -124,29 +154,46 @@ def login():
         username = request.form['username']
         password = request.form['password']
         
+        print(f"🔐 Tentativa de login:")
+        print(f"   - Username: {username}")
+        print(f"   - Password: {password}")
+        
         # Validação básica de entrada
         if not username or not password:
+            print("❌ Username ou password vazios")
             flash('Usuário e senha são obrigatórios')
             return render_template('login.html')
         
         with sqlite3.connect(DB_NAME) as conn:
             user = conn.execute("SELECT id, username, password, is_admin FROM users WHERE username=?", (username,)).fetchone()
             
-        if user and check_password_hash(user[2], password):
-            session.clear()  # Limpa qualquer sessão anterior
-            session['logged_in'] = True
-            session['user_id'] = user[0]
-            session['username'] = user[1]
-            session['is_admin'] = bool(user[3])
+        if user:
+            print(f"✅ Usuário encontrado no banco:")
+            print(f"   - ID: {user[0]}")
+            print(f"   - Username: {user[1]}")
+            print(f"   - Hash: {user[2][:20]}...")
+            print(f"   - Is Admin: {bool(user[3])}")
             
-            # Incrementa o contador de login bem-sucedido
-            increment_login_counter()
-            
-            return redirect(url_for('users'))
+            if check_password_hash(user[2], password):
+                print("✅ Senha confere! Login bem-sucedido.")
+                session.clear()  # Limpa qualquer sessão anterior
+                session['logged_in'] = True
+                session['user_id'] = user[0]
+                session['username'] = user[1]
+                session['is_admin'] = bool(user[3])
+                
+                # Incrementa o contador de login bem-sucedido
+                increment_login_counter()
+                
+                return redirect(url_for('users'))
+            else:
+                print("❌ Senha não confere!")
         else:
-            # Incrementa o contador de login falho
-            increment_login_failed_counter()
-            flash('Usuário ou Senha inválidos')
+            print(f"❌ Usuário '{username}' não encontrado no banco!")
+            
+        # Incrementa o contador de login falho
+        increment_login_failed_counter()
+        flash('Usuário ou Senha inválidos')
     return render_template('login.html')
 
 
