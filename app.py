@@ -84,21 +84,34 @@ def init_db():
                             is_admin BOOLEAN DEFAULT 0
                         )''')
         
-        # Verificar se existe algum usuário admin
-        admin_exists = conn.execute("SELECT COUNT(*) FROM users WHERE is_admin = 1").fetchone()[0]
+        # Obter configurações do admin das variáveis de ambiente
+        admin_username = os.getenv('ADMIN_USERNAME', 'admin')
+        admin_password = os.getenv('ADMIN_PASSWORD', 'admin')
+        admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+        admin_fullname = os.getenv('ADMIN_FULLNAME', 'Administrador')
+        admin_phone = os.getenv('ADMIN_PHONE', '(00) 00000-0000')
         
-        # Se não existir nenhum admin, criar um usuário admin padrão com senha hash
-        if admin_exists == 0:
-            admin_username = os.getenv('ADMIN_USERNAME', 'admin')
-            admin_password = os.getenv('ADMIN_PASSWORD', 'admin')
-            admin_email = os.getenv('ADMIN_EMAIL', 'admin@example.com')
-            admin_fullname = os.getenv('ADMIN_FULLNAME', 'Administrador')
-            admin_phone = os.getenv('ADMIN_PHONE', '(00) 00000-0000')
-            
-            hashed_password = generate_password_hash(admin_password)
-            
+        # Verificar se o usuário admin já existe
+        existing_admin = conn.execute("SELECT id, password FROM users WHERE username = ? AND is_admin = 1", (admin_username,)).fetchone()
+        
+        hashed_password = generate_password_hash(admin_password)
+        
+        if existing_admin:
+            # Admin existe - verificar se a senha precisa ser atualizada
+            current_hash = existing_admin[1]
+            if not check_password_hash(current_hash, admin_password):
+                # Senha diferente - atualizar
+                conn.execute(
+                    "UPDATE users SET password = ?, fullname = ?, phone = ?, email = ? WHERE id = ?",
+                    (hashed_password, admin_fullname, admin_phone, admin_email, existing_admin[0])
+                )
+                print("Senha do usuário administrador sincronizada com as variáveis de ambiente.")
+            else:
+                print("Usuário administrador já existe com senha correta.")
+        else:
+            # Admin não existe - criar novo
             conn.execute(
-                "INSERT OR IGNORE INTO users (fullname, phone, email, username, password, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO users (fullname, phone, email, username, password, is_admin) VALUES (?, ?, ?, ?, ?, ?)",
                 (admin_fullname, admin_phone, admin_email, admin_username, hashed_password, 1)
             )
             print("Usuário administrador padrão criado com sucesso.")
