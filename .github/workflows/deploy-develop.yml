@@ -1,31 +1,63 @@
+# =============================================================================
+# WORKFLOW DE DEPLOY PARA AMBIENTE DE DESENVOLVIMENTO
+# =============================================================================
+# Este workflow é executado automaticamente quando há push na branch 'develop'
+# Objetivo: Deploy rápido para testes e validação de novas funcionalidades
+# Ambiente: Servidor de desenvolvimento com self-hosted runner
+# =============================================================================
+
 name: Deploy Para Ambiente Develop (Testes)
 
+# TRIGGER: Define quando este workflow será executado
 on:
   push:
     branches:
-      - develop   
+      - develop   # Executa apenas quando há push na branch develop
 
 jobs:
   deploy-develop:
+    # RUNNER: Especifica onde o job será executado
+    # [self-hosted, develop-runner] = runner próprio com label 'develop-runner'
+    # Isso permite controle total sobre o ambiente de execução
     runs-on: [self-hosted, develop-runner]
 
     steps:
+      # STEP 1: Baixar o código fonte do repositório
+      # actions/checkout@v3 é uma action oficial do GitHub
+      # Faz o download do código da branch atual para o runner
       - name: Checkout do código
         uses: actions/checkout@v3
 
+      # STEP 2: Construir a imagem Docker da aplicação
+      # docker build cria uma nova imagem baseada no Dockerfile
+      # -t define a tag/nome da imagem como 'app-user-registration-develop'
+      # . indica que o contexto de build é o diretório atual
       - name: Build da imagem Docker
         run: |
           docker build -t app-user-registration-develop .
 
+      # STEP 3: Parar e remover containers antigos (se existirem)
+      # || true garante que o comando não falhe se o container não existir
+      # Isso é importante para o primeiro deploy ou quando o container já foi removido
       - name: Parar e remover containers antigos
         run: |
           docker stop app-user-registration-develop || true
           docker rm app-user-registration-develop || true
 
+      # STEP 4: Executar o novo container
+      # -d = executa em background (detached mode)
+      # --restart=always = reinicia automaticamente se o container parar
+      # --name = define o nome do container
+      # -p 80:5000 = mapeia a porta 80 do host para a porta 5000 do container
+      # app-user-registration-develop:latest = imagem a ser executada
       - name: Subir novo container
         run: |
           docker run -d --restart=always --name app-user-registration-develop -p 80:5000 app-user-registration-develop:latest
 
+      # STEP 5: Limpeza de imagens não utilizadas
+      # docker image prune -f remove imagens órfãs (sem tag) para economizar espaço
+      # -f = força a remoção sem confirmação
+      # Importante para manter o servidor limpo após múltiplos builds
       - name: Cleanup imagens antigas
         run: | 
-          docker image prune -f 
+          docker image prune -f
