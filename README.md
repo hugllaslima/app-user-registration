@@ -22,27 +22,27 @@ Este projeto foi especialmente preparado para estudantes que estão iniciando na
 ```
 app-user-registration/
 ├── .github/
-│   └── workflows/           # Arquivos de configuração do GitHub Actions
+│   └── workflows/                  # Arquivos de configuração do GitHub Actions
 │       ├── deploy-develop.yml
 │       └── deploy-production.yml
-├── scripts/                 # Scripts utilitários
-│   ├── check_db.py         # Verificação do banco de dados
-│   ├── entrypoint.sh       # Script de inicialização
-│   ├── sync-branchs.sh     # Sincronização de branches
-│   ├── test_login.py       # Testes de login
-│   ├── test_login_admin.py # Testes de login admin
-│   └── update_admin_password.py
+├── scripts/                        # Scripts utilitários
+│   ├── check_db.py                 # Verificação do banco de dados
+│   ├── entrypoint.sh               # Script de inicialização
+│   ├── sync-branchs.sh             # Sincronização de branches
+│   ├── test_login.py               # Testes de login
+│   ├── test_login_admin.py         # Testes de login admin
+│   └── update_admin_password.py    # Atualização da senha do admin
 ├── static/
-│   └── css/                # Arquivos de estilo
+│   └── css/                        # Arquivos de estilo
 │       └── style.css
-├── templates/              # Templates HTML
+├── templates/                      # Templates HTML
 │   ├── login.html
 │   ├── register.html
 │   └── users.html
-├── app.py                  # Aplicação principal
-├── requirements.txt        # Dependências do projeto
-├── Dockerfile             # Configuração do container
-└── users.db               # Banco de dados SQLite
+├── app.py                          # Aplicação principal
+├── requirements.txt                # Dependências do projeto
+├── Dockerfile                      # Configuração do container
+└── users.db                        # Banco de dados SQLite
 ```
 
 ## 🌿 Branches
@@ -129,10 +129,22 @@ A aplicação estará disponível em `http://localhost:5000`
 
 ### Usuário Administrador Padrão
 
-Ao inicializar o banco de dados, um usuário administrador é criado usando as variáveis de ambiente:
+Ao inicializar o banco de dados, um usuário administrador é criado automaticamente usando as variáveis de ambiente:
 - Username: Definido em `ADMIN_USERNAME` (padrão: admin)
 - Senha: Definida em `ADMIN_PASSWORD` (padrão: admin)
 - Email: Definido em `ADMIN_EMAIL`
+- Nome Completo: Definido em `ADMIN_FULLNAME`
+- Telefone: Definido em `ADMIN_PHONE`
+
+#### 🔄 Sincronização Automática de Senha
+
+**NOVA FUNCIONALIDADE**: A aplicação agora sincroniza automaticamente a senha do administrador com as variáveis de ambiente a cada inicialização do container:
+
+- **Se o usuário admin não existir**: Será criado com as credenciais das variáveis de ambiente
+- **Se o usuário admin já existir**: A senha será automaticamente atualizada para corresponder à variável `ADMIN_PASSWORD`
+- **Dados atualizados**: Nome completo, telefone e email também são sincronizados
+
+Isso garante que mudanças nas variáveis de ambiente sejam refletidas no banco de dados, eliminando problemas de autenticação após deploys.
 
 ⚠️ **CRÍTICO**: Sempre altere a senha padrão antes de usar em produção!
 
@@ -331,6 +343,25 @@ AWS_ECR_REPOSITORY=app-user-registration
 - [ ] Código testado localmente
 - [ ] Variáveis de ambiente atualizadas se necessário
 - [ ] Runners online e funcionando
+
+## 📝 Mudanças Recentes
+
+### Versão 1.1.0 - Sincronização Automática do Admin
+- **Nova funcionalidade**: A senha do usuário administrador agora é sincronizada automaticamente com as variáveis de ambiente a cada inicialização
+- **Correção crítica**: Eliminado problema de autenticação após mudanças nas variáveis de ambiente
+- **Melhoria**: Dados do admin (nome, telefone, email) também são atualizados automaticamente
+
+### Como Fazer Commit das Alterações
+```bash
+# Adicionar arquivos modificados
+git add app.py README.md
+
+# Commit com mensagem descritiva
+git commit -m "feat: implementa sincronização automática da senha do admin"
+
+# Push para o repositório
+git push origin main
+```
 
 ## 👥 Contribuição
 
