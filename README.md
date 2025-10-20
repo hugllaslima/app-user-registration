@@ -131,7 +131,7 @@ A aplicação estará disponível em `http://localhost:5000`
 
 Ao inicializar o banco de dados, um usuário administrador é criado automaticamente usando as variáveis de ambiente:
 - Username: Definido em `ADMIN_USERNAME` (padrão: admin)
-- Senha: Definida em `ADMIN_PASSWORD` (padrão: admin)
+- Senha: Definida em `ADMIN_PASSWORD` (padrão: admin123)
 - Email: Definido em `ADMIN_EMAIL`
 - Nome Completo: Definido em `ADMIN_FULLNAME`
 - Telefone: Definido em `ADMIN_PHONE`
